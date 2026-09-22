@@ -4,10 +4,23 @@ import cors from 'cors';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import mongoose from 'mongoose';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import triageRoutes from './routes/triageRoutes.js';
 
+// ES Module mein __dirname calculate karne ke liye
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
-app.use(cors());
+
+// CORS Settings - Client/Browser requests ko allow karne ke liye
+app.use(cors({
+  origin: '*', 
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 app.use(express.json());
 
 // Register Triage API Endpoint
@@ -70,7 +83,7 @@ app.post('/api/appointments', auth, async (req, res) => {
   res.status(201).json(a);
 });
 
-// MongoDB Connection with local fallback
+// MongoDB Connection
 let mongo = 'not configured';
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/swasthya_sakha';
 
@@ -84,4 +97,19 @@ mongoose
 
 app.get('/api/status', (req, res) => res.json({ api: 'ok', mongo }));
 
-app.listen(PORT, () => console.log(`Swasthya Sakha API running on http://localhost:${PORT}`));
+// =========================================================
+// SERVE REACT FRONTEND STATIC BUILD FILES
+// =========================================================
+const clientBuildPath = path.join(__dirname, '../client/dist');
+app.use(express.static(clientBuildPath));
+
+// Sabhi Non-API routes ko React index.html par fallback karne ke liye
+app.get('*', (req, res) => {
+  res.sendFile(path.join(clientBuildPath, 'index.html'), (err) => {
+    if (err) {
+      res.status(500).send("Build file index.html not found. Make sure client is built.");
+    }
+  });
+});
+
+app.listen(PORT, () => console.log(`Swasthya Sakha API running on port ${PORT}`));
