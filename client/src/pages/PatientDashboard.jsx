@@ -6,7 +6,9 @@ import Badge from '../components/Badge';
 import { appointments } from '../data';
 import { SymptomSelector, TriageCard, QUICK_SYMPTOMS } from '../components/EmergencyTriage';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://swasthya-sakha-web.onrender.com';
+// Safely strip trailing /api if present to avoid double '/api/api/...'
+const rawUrl = import.meta.env.VITE_API_URL || 'https://swasthya-sakha-web.onrender.com';
+const API_BASE_URL = rawUrl.replace(/\/api\/?$/, '');
 export default function PatientDashboard({ subpage }) {
   const [lang, setLang] = useState('en-IN');
   const [listening, setListening] = useState(false);
@@ -109,9 +111,11 @@ export default function PatientDashboard({ subpage }) {
         setStatusMsg('Failed to record triage.');
       }
     } catch (err) {
-  console.error("Triage Fetch Error:", err);
-  setStatusMsg(`Server error: ${err.message || 'Unable to reach backend.'}`);
-}
+    console.error('Triage fetch error detail:', err);
+    setStatusMsg(`Error: ${err.message || 'Unable to reach backend'}`);
+  } finally {
+    setSubmitting(false);
+  }
   };
 
   // Robust Multilingual Web Speech Handler
