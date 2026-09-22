@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import mongoose from 'mongoose';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import triageRoutes from './routes/triageRoutes.js';
 
@@ -100,16 +101,22 @@ app.get('/api/status', (req, res) => res.json({ api: 'ok', mongo }));
 // =========================================================
 // SERVE REACT FRONTEND STATIC BUILD FILES
 // =========================================================
-const clientBuildPath = path.join(__dirname, '../client/dist');
+const distPath = path.join(__dirname, '../client/dist');
+const buildPath = path.join(__dirname, '../client/build');
+
+// Direct 'dist' ya 'build' folder detect karne ka logic
+const clientBuildPath = fs.existsSync(distPath) ? distPath : buildPath;
+
 app.use(express.static(clientBuildPath));
 
 // Sabhi Non-API routes ko React index.html par fallback karne ke liye
 app.get('*', (req, res) => {
-  res.sendFile(path.join(clientBuildPath, 'index.html'), (err) => {
-    if (err) {
-      res.status(500).send("Build file index.html not found. Make sure client is built.");
-    }
-  });
+  const indexPath = path.join(clientBuildPath, 'index.html');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(404).send(`Build folder found at ${clientBuildPath}, but index.html is missing. Check build logs.`);
+  }
 });
 
 app.listen(PORT, () => console.log(`Swasthya Sakha API running on port ${PORT}`));
