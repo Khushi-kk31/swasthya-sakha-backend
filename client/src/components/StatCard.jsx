@@ -5,6 +5,7 @@ export default function StatCard({
   sub,
   icon: Icon,
   tone = "teal",
+  
 }) {
   const tones = {
     teal: "bg-teal-50 text-teal-700",
