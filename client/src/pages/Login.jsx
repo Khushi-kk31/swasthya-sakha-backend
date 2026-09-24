@@ -12,19 +12,14 @@ export default function Login() {
   const [role, setRole] = useState("patient");
   const [qr, setQr] = useState(false);
   const [error, setError] = useState("");
+  let [input, setInput] = useState("");
   const dispatch = useDispatch();
   const nav = useNavigate();
   const submit = async (e) => {
     e.preventDefault();
     setError("");
     try {
-      const username = {
-        patient: "patient",
-        healthWorker: "worker",
-        doctor: "doctor",
-        facilityAdmin: "facility",
-        districtAdmin: "district",
-      }[role];
+      const username = input.trim();
       const data = await api("/auth/login", {
         method: "POST",
         body: JSON.stringify({
@@ -39,13 +34,17 @@ export default function Login() {
       setError(err.message);
     }
   };
+
+  const handleRedirect = () => {
+    nav('/');
+  }
   return (
     <div className="min-h-screen grid lg:grid-cols-[1.1fr_.9fr] bg-[#f6f9fc]">
       <div className="hidden lg:flex bg-[#0b2239] text-white p-12 relative overflow-hidden">
         <div className="max-w-xl self-center relative z-10">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="w-12 h-12 rounded-2xl bg-teal-400 text-[#0b2239] grid place-items-center font-black">
-              SS
+          <div className="flex items-center gap-3 mb-8 cursor-pointer" onClick={handleRedirect}>
+            <div className="w-12 h-12 rounded-2xl bg-teal-400 text-[#0b2239] text-xl  grid place-items-center font-black ">
+              स्व
             </div>
             <div>
               <div className="text-xl font-bold">Swasthya Sakha</div>
@@ -82,7 +81,7 @@ export default function Login() {
         <div className="w-full max-w-lg">
           <div className="lg:hidden flex items-center gap-3 mb-8">
             <div className="w-11 h-11 rounded-xl bg-teal-600 text-white grid place-items-center font-black">
-              SS
+              स्व
             </div>
             <b>Swasthya Sakha</b>
           </div>
@@ -117,6 +116,7 @@ export default function Login() {
                   placeholder={
                     role === "patient" ? "10-digit mobile" : "Enter user ID"
                   }
+                  onChange={(e) => setInput(e.target.value)}
                 />
               </label>
               <label className="block text-sm font-semibold">
@@ -129,13 +129,15 @@ export default function Login() {
                   placeholder="••••••••"
                 />
               </label>
-              {error && <p className="text-sm text-rose-600">{error}</p>}
               <button className="w-full bg-[#0b2239] text-white rounded-xl py-3.5 font-semibold flex items-center justify-center gap-2 hover:bg-[#12355b]">
                 Sign in as {roles.find((r) => r.id === role)?.label}
                 <ArrowRight size={18} />
               </button>
+
+              {error && <p className="text-sm text-rose-600">{error}</p>}
+
             </form>
-            {role === "patient" && (
+            {role === "patient"  && (
               <button
                 onClick={() => setQr(true)}
                 className="w-full mt-3 border border-teal-200 text-teal-800 bg-teal-50 rounded-xl py-3 font-semibold flex items-center justify-center gap-2"
