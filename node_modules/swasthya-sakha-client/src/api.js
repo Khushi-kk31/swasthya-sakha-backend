@@ -1,11 +1,11 @@
-// Updated api.js
-// This line automatically checks if the environment variable has '/api' at the end, and appends it if missing
+
 let baseUri = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 if (baseUri && !baseUri.endsWith("/api")) {
   baseUri = `${baseUri}/api`;
 }
 
 const API = baseUri;
+// const API = "https://reanalyze-levitator-foothill.ngrok-free.dev/api"
 
 export async function api(path, options = {}) {
   const auth = JSON.parse(localStorage.getItem("ss_auth") || "null");

@@ -17,28 +17,37 @@ export default function Login() {
   const submit = async (e) => {
     e.preventDefault();
     setError("");
+
+    // 1. Capture what the user actually types into the form inputs
+    const enteredUsername = e.currentTarget.username?.value;
+    const enteredPassword = e.currentTarget.password.value;
+
     try {
-      const username = {
-        patient: "patient",
-        healthWorker: "worker",
-        doctor: "doctor",
-        facilityAdmin: "facility",
-        districtAdmin: "district",
-      }[role];
       const data = await api("/auth/login", {
         method: "POST",
         body: JSON.stringify({
-          username,
-          password: e.currentTarget.password.value,
-          role,
+          // 2. Send the real user-entered details to your new Express backend controller
+          username: enteredUsername || role, // Fallback to role string only if field is blank
+          password: enteredPassword,
+          role, // Matches the active selected workspace tab
         }),
       });
+
+      // 3. Save the token payload into localStorage so api.js can read it for protected endpoints
+      localStorage.setItem(
+        "ss_auth",
+        JSON.stringify({ token: data.token, user: data.user }),
+      );
+
+      // 4. Update Redux store state and navigate to workspace shell
       dispatch(loginSuccess(data));
       nav("/dashboard");
     } catch (err) {
-      setError(err.message);
+      // Displays the exact reason sent by your Express controller (e.g. "Invalid credentials")
+      setError(err.message || "Login failed.");
     }
   };
+
   return (
     <div className="min-h-screen grid lg:grid-cols-[1.1fr_.9fr] bg-[#f6f9fc]">
       <div className="hidden lg:flex bg-[#0b2239] text-white p-12 relative overflow-hidden">
@@ -110,15 +119,20 @@ export default function Login() {
             </div>
             <form onSubmit={submit} className="space-y-4">
               <label className="block text-sm font-semibold">
-                Mobile / User ID
+                Mobile / User ID or ABHA Address
                 <input
+                  name="username" // 👈 ADDED: Essential property for the submit handler to read values
                   required
+                  type="text"
                   className="mt-1.5 w-full border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-teal-500"
                   placeholder={
-                    role === "patient" ? "10-digit mobile" : "Enter user ID"
-                  }
+                    role === "patient"
+                      ? "e.g., username@abdm"
+                      : "Enter email or user ID"
+                  } // 👈 UPDATED: Dynamic guidance placeholders matching our live database fields
                 />
               </label>
+
               <label className="block text-sm font-semibold">
                 Password
                 <input
@@ -129,8 +143,13 @@ export default function Login() {
                   placeholder="••••••••"
                 />
               </label>
+
               {error && <p className="text-sm text-rose-600">{error}</p>}
-              <button className="w-full bg-[#0b2239] text-white rounded-xl py-3.5 font-semibold flex items-center justify-center gap-2 hover:bg-[#12355b]">
+
+              <button
+                type="submit"
+                className="w-full bg-[#0b2239] text-white rounded-xl py-3.5 font-semibold flex items-center justify-center gap-2 hover:bg-[#12355b]"
+              >
                 Sign in as {roles.find((r) => r.id === role)?.label}
                 <ArrowRight size={18} />
               </button>

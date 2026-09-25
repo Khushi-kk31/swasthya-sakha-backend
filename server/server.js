@@ -11,6 +11,7 @@ import triageRoutes from './routes/triageRoutes.js';
 import { auth } from './middleware/authMiddleware.js';
 import authRouter from './routes/authRoutes.js'
 
+
 // ES Module mein __dirname calculate karne ke liye
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -127,4 +128,13 @@ app.use('/api/*', (req, res) => {
 });
 
 
+// app.listen(PORT, () => console.log(`Swasthya Sakha API running on port ${PORT}`));
+
+
 app.listen(PORT, () => console.log(`Swasthya Sakha API running on port ${PORT}`));
+
+ 
+
+
+
+// 3Jp4QjBkpVl5dXvDrDhcclpxuf6_7hsjADr52q9n6EY76g15f
