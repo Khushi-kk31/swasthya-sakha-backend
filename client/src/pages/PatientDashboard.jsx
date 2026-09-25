@@ -5,11 +5,17 @@ import SectionHeader from '../components/SectionHeader';
 import Badge from '../components/Badge';
 import { appointments } from '../data';
 import { SymptomSelector, TriageCard, QUICK_SYMPTOMS } from '../components/EmergencyTriage';
+import { api } from "../api";
+import { saveOfflineAssessment } from "../utils/offlineSync";
+import { useDispatch } from "react-redux";
+import { setToast } from "../store/uiSlice";
+
 
 // Safely strip trailing /api if present to avoid double '/api/api/...'
 const rawUrl = import.meta.env.VITE_API_URL || 'https://swasthya-sakha-web.onrender.com';
 const API_BASE_URL = rawUrl.replace(/\/api\/?$/, '');
 export default function PatientDashboard({ subpage }) {
+    const dispatch = useDispatch();
   const [lang, setLang] = useState('en-IN');
   const [listening, setListening] = useState(false);
   const [text, setText] = useState('');
@@ -86,10 +92,27 @@ export default function PatientDashboard({ subpage }) {
       setStatusMsg('Please select symptoms or speak/type before submitting.');
       return;
     }
-
+   const payload = {
+      symptomsText: text,
+      selectedSymptoms,
+      totalScore,
+      language: lang,
+      timestamp: new Date().toISOString()
+    };
     setSubmitting(true);
     setStatusMsg('');
+// 1. Check if Offline
+    if (!navigator.onLine) {
+      saveOfflineAssessment(payload);
+      setStatusMsg('📶 Offline: Record Sumbitted to local storage');
+      dispatch(setToast({ type: 'info', message: 'Offline assessment saved locally!' }));
+      setText('');
+      resetSymptoms();
+      setSubmitting(false);
+      return;
+    }
 
+    // 2. Try Online Submission
     try {
       const response = await fetch(`${API_BASE_URL}/api/triage/submit`, {
         method: 'POST',
@@ -106,7 +129,9 @@ export default function PatientDashboard({ subpage }) {
 
       if (data.success) {
         setStatusMsg('Triage recorded successfully!');
+        dispatch(setToast({ type: 'success', message: 'Triage submitted successfully!' }));
         setText('');
+        resetSymptoms();
       } else {
         setStatusMsg('Failed to record triage.');
       }

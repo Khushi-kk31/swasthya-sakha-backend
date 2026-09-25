@@ -3,7 +3,8 @@ import {
   ArrowRight,
   BarChart3,
   CheckCircle2,
-  Heart,
+  // Heart,
+  Plus,
   Users,
   ShieldCheck,
   Leaf,
@@ -790,7 +791,8 @@ export default function SwasthyaSakhaLanding({
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 sm:px-8">
           <a href="#home" className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-400/10 text-emerald-300">
-              <Heart size={22} fill="currentColor" />
+              
+              <Plus size={22} strokeWidth={5} fill="currentColor" />
             </div>
             <div>
               <div className="text-lg font-extrabold">

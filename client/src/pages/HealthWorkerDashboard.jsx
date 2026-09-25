@@ -21,6 +21,55 @@ export default function HealthWorkerDashboard({ subpage }) {
   const nav = useNavigate();
   const [em, setEm] = useState(false);
   const [tele, setTele] = useState(false);
+  const [triageList, setTriageList] = useState([]);
+
+  const getPatientStats = (list) => {
+    const now = new Date();
+
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const tomorrow = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() + 1,
+    );
+
+    const yesterday = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() - 1,
+    );
+
+    const todayCount = list.filter((item) => {
+      const date = new Date(item.createdAt);
+      return date >= today && date < tomorrow;
+    }).length;
+
+    const yesterdayCount = list.filter((item) => {
+      const date = new Date(item.createdAt);
+      return date >= yesterday && date < today;
+    }).length;
+
+    let percentage = 0;
+
+    if (yesterdayCount > 0) {
+      percentage = ((todayCount - yesterdayCount) / yesterdayCount) * 100;
+    }
+
+    return {
+      todayCount,
+      yesterdayCount,
+      percentage,
+    };
+  };
+
+  const { todayCount, yesterdayCount, percentage } =
+    getPatientStats(triageList);
+
+  const highRiskCount = triageList.filter(
+    (item) => item.triageLevel === "RED",
+  ).length;
+
   const title =
     subpage === "facilities"
       ? "Find Facility"
@@ -35,13 +84,17 @@ export default function HealthWorkerDashboard({ subpage }) {
       <div className="grid md:grid-cols-4 gap-4">
         <StatCard
           label="Patients today"
-          value="48"
-          sub="+12% vs yesterday"
+          value={todayCount}
+          sub={
+            yesterdayCount === 0
+              ? "No records yesterday"
+              : `${percentage >= 0 ? "+" : "-"}${percentage.toFixed(0)}% vs Yesterday`
+          }
           icon={Users}
         />
         <StatCard
           label="High-risk alerts"
-          value="3"
+          value={highRiskCount}
           sub="Needs action"
           icon={AlertTriangle}
           tone="rose"
@@ -63,9 +116,9 @@ export default function HealthWorkerDashboard({ subpage }) {
       </div>
       {!subpage && (
         <div className="mt-5">
-            <DoctorTriageQueue />
+          <DoctorTriageQueue onQueueUpdate={setTriageList} />
         </div>
-        )}
+      )}
       {subpage === "facilities" ? (
         <div className="card p-5 mt-5">
           <SectionHeader
