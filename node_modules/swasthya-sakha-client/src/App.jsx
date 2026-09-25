@@ -116,6 +116,8 @@ function Shell() {
               }
             />
 
+            
+
             {/* PATIENT */}
             <Route
               path="/dashboard/history"

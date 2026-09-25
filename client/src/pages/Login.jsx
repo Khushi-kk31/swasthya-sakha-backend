@@ -49,6 +49,10 @@ export default function Login() {
     }
   };
 
+  const handleRedirect = () => {
+    nav('/');
+  }
+
   return (
     <div className="min-h-screen grid lg:grid-cols-[1.1fr_.9fr] bg-[#f6f9fc]">
       <div className="hidden lg:flex bg-[#0b2239] text-white p-12 relative overflow-hidden">

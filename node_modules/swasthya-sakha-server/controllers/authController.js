@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs/dist/bcrypt.js";
 import jwt from "jsonwebtoken";
-import Patient from "../models/patient.js";
+import Patient from "../models/Patient.js";
 import HealthWorker from "../models/HealthWorker.js";
 import Doctor from "../models/Doctor.js";
 
