@@ -32,7 +32,6 @@ export default function PatientDashboard({ subpage }) {
 
   useEffect(() => { setTab(subpage || 'overview'); }, [subpage]);
 
-  // Clean up recognition instance on unmount
   useEffect(() => {
     return () => {
       if (recognitionRef.current) {

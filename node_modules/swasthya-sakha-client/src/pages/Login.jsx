@@ -15,6 +15,7 @@ export default function Login() {
   let [input, setInput] = useState("");
   const dispatch = useDispatch();
   const nav = useNavigate();
+
   const submit = async (e) => {
     e.preventDefault();
     setError("");
@@ -50,14 +51,17 @@ export default function Login() {
   };
 
   const handleRedirect = () => {
-    nav('/');
-  }
+    nav("/");
+  };
 
   return (
     <div className="min-h-screen grid lg:grid-cols-[1.1fr_.9fr] bg-[#f6f9fc]">
       <div className="hidden lg:flex bg-[#0b2239] text-white p-12 relative overflow-hidden">
         <div className="max-w-xl self-center relative z-10">
-          <div className="flex items-center gap-3 mb-8 cursor-pointer" onClick={handleRedirect}>
+          <div
+            className="flex items-center gap-3 mb-8 cursor-pointer"
+            onClick={handleRedirect}
+          >
             <div className="w-12 h-12 rounded-2xl bg-teal-400 text-[#0b2239] text-xl  grid place-items-center font-black ">
               स्व
             </div>
@@ -123,22 +127,22 @@ export default function Login() {
               ))}
             </div>
             <form onSubmit={submit} className="space-y-4">
-              <label className="block text-sm font-semibold">
-                Mobile / User ID or ABHA Address
+              <label className="block text-sm font-semibold text-[#0b2239]">
+                Username or 14-Digit ABHA Number
                 <input
-                  name="username" // 👈 ADDED: Essential property for the submit handler to read values
+                  name="username"
                   required
                   type="text"
                   className="mt-1.5 w-full border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-teal-500"
                   placeholder={
                     role === "patient"
-                      ? "e.g., username@abdm"
-                      : "Enter email or user ID"
-                  } // 👈 UPDATED: Dynamic guidance placeholders matching our live database fields
+                      ? "e.g., 61-5230-2840-0239 or mukesh123"
+                      : "Enter your username"
+                  }
                 />
               </label>
 
-              <label className="block text-sm font-semibold">
+              <label className="block text-sm font-semibold text-[#0b2239]">
                 Password
                 <input
                   name="password"
@@ -158,9 +162,6 @@ export default function Login() {
                 Sign in as {roles.find((r) => r.id === role)?.label}
                 <ArrowRight size={18} />
               </button>
-
-              {error && <p className="text-sm text-rose-600">{error}</p>}
-
             </form>
 
             {role !== "districtAdmin" && (

@@ -1,4 +1,4 @@
-import bcrypt from "bcryptjs/dist/bcrypt.js";
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import Patient from "../models/Patient.js";
 import HealthWorker from "../models/HealthWorker.js";
@@ -7,19 +7,20 @@ import Doctor from "../models/Doctor.js";
 // Helper function to return the correct Mongoose Model class dynamically
 const getModelByRole = (role) => {
   switch (role) {
-    case "patient": return Patient;
-    case "healthWorker": return HealthWorker;
-    case "doctor": return Doctor;
-    default: return null;
+    case "patient":
+      return Patient;
+    case "healthWorker":
+      return HealthWorker;
+    case "doctor":
+      return Doctor;
+    default:
+      return null;
   }
 };
 
-// =========================================================================
-// 1. UNIFIED REGISTER CONTROLLER
-// =========================================================================
 export const register = async (req, res) => {
   try {
-    const { role, password, name, username, email } = req.body;
+    const { role, password, name } = req.body;
     
     if (!role || !password || !name) {
       return res.status(400).json({ message: "Mandatory structural parameters are missing." });
@@ -30,32 +31,42 @@ export const register = async (req, res) => {
       return res.status(400).json({ message: "The provided deployment role scope is invalid." });
     }
 
-    // Securely hash user credentials
+   
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Dynamic checks & model creation based on specific user roles
-    if (role === "doctor") {
-      const { registrationNo, specialization } = req.body;
-      const existingDoc = await Doctor.findOne({ $or: [{ email }, { registrationNo }, { username }] });
-      if (existingDoc) return res.status(400).json({ message: "License number or Email already registered." });
+    if (role === "patient") {
+      const { abhaAddress, abhaNumber, gender, dateOfBirth, qrVerified } = req.body;
 
-      const newDoc = new Doctor({ name, email, username, password: hashedPassword, registrationNo, specialization });
-      await newDoc.save();
+      if (!abhaAddress || !abhaNumber || !gender || !dateOfBirth) {
+        return res.status(400).json({ message: "Missing required patient registration parameters." });
+      }
+
+      const baseUsername = name.toLowerCase().replace(/[^a-z0-9]/g, "");
       
-    } else if (role === "healthWorker") {
-      const { healthWorkerId, facility } = req.body;
-      const existingWorker = await HealthWorker.findOne({ $or: [{ email }, { healthWorkerId }, { username }] });
-      if (existingWorker) return res.status(400).json({ message: "Worker ID or Email already registered." });
+      const generatedUsername = `${baseUsername}${Math.floor(100 + Math.random() * 900)}`;
 
-      const newWorker = new HealthWorker({ name, email, username, password: hashedPassword, healthWorkerId, facility });
-      await newWorker.save();
+      const cleanAbhaNumber = abhaNumber.trim();
+      const cleanAbhaAddress = abhaAddress.trim();
 
-    } else if (role === "patient") {
-      const { abhaId, abhaNumber, gender, dateOfBirth, qrVerified } = req.body;
-      const existingPatient = await Patient.findOne({ $or: [{ abhaId }, { username }] });
-      if (existingPatient) return res.status(400).json({ message: "ABHA Identity record already exists." });
+      const existingPatient = await TargetModel.findOne({ 
+        $or: [{ abhaNumber: cleanAbhaNumber }, { username: generatedUsername }] 
+      });
+      
+      if (existingPatient) {
+        return res.status(400).json({ message: "ABHA Number or unique username already exists." });
+      }
 
-      const newPatient = new Patient({ name, username, password: hashedPassword, abhaId, abhaNumber, gender, dateOfBirth, qrVerified });
+      const newPatient = new TargetModel({ 
+        name: name.trim(), 
+        username: generatedUsername,  
+        password: hashedPassword, 
+        abhaId: cleanAbhaAddress,          
+        abhaNumber: cleanAbhaNumber,   
+        gender, 
+        dateOfBirth, 
+        qrVerified: qrVerified || false 
+      });
+      
       await newPatient.save();
     }
 
@@ -66,9 +77,6 @@ export const register = async (req, res) => {
   }
 };
 
-// =========================================================================
-// 2. UNIFIED LOGIN CONTROLLER
-// =========================================================================
 export const login = async (req, res) => {
   try {
     const { username, password, role } = req.body;
@@ -82,9 +90,12 @@ export const login = async (req, res) => {
       return res.status(400).json({ message: "Invalid workspace context." });
     }
 
-    // Query dynamically by either username or abhaId (for patients logging in with ABHA text values)
+    // 💡 FIX: Look up by either custom unique username OR numeric abhaNumber 
     const user = await TargetModel.findOne({
-      $or: [{ username: username }, { abhaId: username }, { email: username }]
+      $or: [
+        { username: username }, 
+        { abhaNumber: username }
+      ]
     });
 
     if (!user) {
@@ -104,7 +115,7 @@ export const login = async (req, res) => {
       { expiresIn: "1d" }
     );
 
-    // Strip password out of user object before returning to client side state management layers
+    // Strip password out before returning
     const userResponse = user.toObject();
     delete userResponse.password;
 
@@ -112,7 +123,7 @@ export const login = async (req, res) => {
       token,
       user: {
         ...userResponse,
-        role // explicitly send back the matched system role
+        role 
       }
     });
 
@@ -128,17 +139,21 @@ export const getMe = async (req, res) => {
     }
 
     const TargetModel = getModelByRole(req.user.role);
-    if (!TargetModel) return res.status(400).json({ message: "Invalid role mapping." });
+    if (!TargetModel)
+      return res.status(400).json({ message: "Invalid role mapping." });
 
     // Finds the live user by MongoDB ID and strips the password string out
-    const profileData = await TargetModel.findById(req.user.id).select("-password");
+    const profileData = await TargetModel.findById(req.user.id).select(
+      "-password",
+    );
     if (!profileData) {
       return res.status(404).json({ message: "User account records missing." });
     }
 
-    return res.status(200).json({ ...profileData.toObject(), role: req.user.role });
+    return res
+      .status(200)
+      .json({ ...profileData.toObject(), role: req.user.role });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
 };
-
