@@ -30,8 +30,6 @@ export const register = async (req, res) => {
     if (!TargetModel) {
       return res.status(400).json({ message: "The provided deployment role scope is invalid." });
     }
-
-   
     const hashedPassword = await bcrypt.hash(password, 10);
 
     if (role === "patient") {
@@ -70,6 +68,80 @@ export const register = async (req, res) => {
       await newPatient.save();
     }
 
+    else if (role === "healthWorker") {
+      const { healthWorkerId, email } = req.body;
+      
+      const facility = req.body.facility;
+
+      if (!healthWorkerId || !facility) {
+        return res.status(400).json({ message: "Missing required health worker facility parameters." });
+      }
+
+      const cleanWorkerId = healthWorkerId.trim();
+      const cleanFacility = facility.trim();
+      const cleanEmail = email ? email.trim() : "";
+
+      const existingWorker = await TargetModel.findOne({
+        $or: [
+          { healthWorkerId: cleanWorkerId },
+          { username: generatedUsername },
+          ...(cleanEmail ? [{ email: cleanEmail }] : [])
+        ]
+      });
+
+      if (existingWorker) {
+        return res.status(400).json({ message: "Health Worker ID, unique username, or email already registered." });
+      }
+
+      const newWorker = new TargetModel({
+        name: name.trim(),
+        username: generatedUsername,  // Saves cleanly as name + suffix (e.g. mukesh234)
+        email: cleanEmail,
+        password: hashedPassword,
+        healthWorkerId: cleanWorkerId,
+        facility: cleanFacility
+      });
+
+      await newWorker.save();
+    }
+
+     else if (role === "doctor") {
+      const { registrationNo, specialization, email } = req.body;
+
+      if (!registrationNo || !specialization) {
+        return res.status(400).json({ message: "Missing required doctor certification parameters." });
+      }
+
+      const cleanRegNo = registrationNo.trim();
+      const cleanSpecialization = specialization.trim();
+      const cleanEmail = email ? email.trim() : "";
+
+      // Check if doctor license details are already in use
+      const existingDoc = await TargetModel.findOne({
+        $or: [
+          { registrationNo: cleanRegNo },
+          { username: generatedUsername },
+          ...(cleanEmail ? [{ email: cleanEmail }] : [])
+        ]
+      });
+
+      if (existingDoc) {
+        return res.status(400).json({ message: "Medical license registration number, username, or email already registered." });
+      }
+
+      const newDoc = new TargetModel({
+        name: name.trim(),
+        username: generatedUsername,  // Saves cleanly as name + suffix (e.g. mukesh234)
+        email: cleanEmail,
+        password: hashedPassword,
+        registrationNo: cleanRegNo,
+        specialization: cleanSpecialization
+      });
+
+      await newDoc.save();
+    }
+
+
     return res.status(201).json({ message: "Registration successful! You can now log in." });
 
   } catch (error) {
@@ -90,7 +162,6 @@ export const login = async (req, res) => {
       return res.status(400).json({ message: "Invalid workspace context." });
     }
 
-    // 💡 FIX: Look up by either custom unique username OR numeric abhaNumber 
     const user = await TargetModel.findOne({
       $or: [
         { username: username }, 
