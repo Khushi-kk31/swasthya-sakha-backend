@@ -51,7 +51,7 @@ export default function Register() {
         if (patientRegMethod === "abha") {
           payload = {
             ...payload,
-            abhaId: formData.abhaAddress, 
+            abhaAddress: formData.abhaAddress, 
             abhaNumber: formData.abhaNumber,
             name: formData.name,
             username: formData.name, 
