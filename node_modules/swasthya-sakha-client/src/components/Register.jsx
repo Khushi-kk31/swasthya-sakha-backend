@@ -52,9 +52,9 @@ export default function Register() {
           payload = {
             ...payload,
             abhaId: formData.abhaAddress, 
-            abhaNumber: formData.abhaNumber, // unique: true
-            name: formData.name, // required: true
-            username: formData.abhaAddress.split("@")[0], // required & unique: strips context domain
+            abhaNumber: formData.abhaNumber,
+            name: formData.name,
+            username: formData.name, 
             dateOfBirth: formData.dateOfBirth,
             gender: formData.gender,
             qrVerified: true,
@@ -63,7 +63,7 @@ export default function Register() {
           payload = {
             ...payload,
             name: formData.name,
-            username: formData.email, 
+            username: formData.name, 
             abhaId: `std_${Date.now()}@abdm`, 
             abhaNumber: `STD-${Date.now()}`,
             dateOfBirth: formData.dateOfBirth || null,

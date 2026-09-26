@@ -21,6 +21,8 @@ import PatientDashboard from "./pages/PatientDashboard";
 import HealthWorkerDashboard from "./pages/HealthWorkerDashboard";
 import DoctorDashboard from "./pages/DoctorDashboard";
 
+import ProfilePage from "./pages/ProfilePage"; 
+
 import {
   FacilityAdminDashboard,
   DistrictAdminDashboard,
@@ -116,6 +118,10 @@ function Shell() {
               }
             />
 
+            <Route
+              path="/dashboard/profile"
+              element={<ProfilePage loggedInUser={user} />}
+            />
             
 
             {/* PATIENT */}

@@ -9,28 +9,41 @@ import { api } from "../api";
 import { saveOfflineAssessment } from "../utils/offlineSync";
 import { useDispatch } from "react-redux";
 import { setToast } from "../store/uiSlice";
+import { useNavigate } from 'react-router-dom';
 
 
 // Safely strip trailing /api if present to avoid double '/api/api/...'
 const rawUrl = import.meta.env.VITE_API_URL || 'https://swasthya-sakha-web.onrender.com';
 const API_BASE_URL = rawUrl.replace(/\/api\/?$/, '');
-export default function PatientDashboard({ subpage }) {
-    const dispatch = useDispatch();
+export default function PatientDashboard({ subpage, loggedInUser }) {
+
+  const dispatch = useDispatch();
   const [lang, setLang] = useState('en-IN');
   const [listening, setListening] = useState(false);
   const [text, setText] = useState('');
   const [tab, setTab] = useState(subpage || 'overview');
 
-  // Ref for recognition to prevent stale closure issues
+  const navigate = useNavigate()
+
+ 
   const recognitionRef = useRef(null);
 
-  // Triage & Translation state
+
   const [selectedSymptoms, setSelectedSymptoms] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [isTranslating, setIsTranslating] = useState(false);
   const [statusMsg, setStatusMsg] = useState('');
 
   useEffect(() => { setTab(subpage || 'overview'); }, [subpage]);
+
+   useEffect(() => {
+    if (loggedInUser) {
+      const isIncomplete = loggedInUser.isProfileComplete === false || loggedInUser.isProfileComplete === undefined;
+      if (isIncomplete) {
+        navigate("/dashboard/profile?onboarding=true");
+      }
+    }
+  }, [loggedInUser, navigate]);
 
   useEffect(() => {
     return () => {

@@ -8,6 +8,7 @@ import { fileURLToPath } from 'url';
 import triageRoutes from './routes/triageRoutes.js';
 import { auth } from './middleware/authMiddleware.js';
 import authRouter from './routes/authRoutes.js'
+import profileRoutes from './routes/profileRoutes.js'
 
 
 // ES Module mein __dirname calculate karne ke liye
@@ -30,17 +31,12 @@ app.use(express.json());
 // Register Triage API Endpoint
 app.use('/api/auth', authRouter);
 app.use('/api/triage', triageRoutes);
+app.use("/api/profile", profileRoutes);
 
 const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || "change-me-in-production";
 
-// const users = [
-//   { id: 'u1', name: 'Asha Patil', role: 'patient', username: 'patient', password: bcrypt.hashSync('demo123', 8) },
-//   { id: 'u2', name: 'Neha Deshmukh', role: 'healthWorker', username: 'worker', password: bcrypt.hashSync('demo123', 8) },
-//   { id: 'u3', name: 'Dr. Meera Shah', role: 'doctor', username: 'doctor', password: bcrypt.hashSync('demo123', 8) },
-//   { id: 'u4', name: 'Rahul Kulkarni', role: 'facilityAdmin', username: 'facility', password: bcrypt.hashSync('demo123', 8) },
-//   { id: 'u5', name: 'Priya Nair', role: 'districtAdmin', username: 'district', password: bcrypt.hashSync('demo123', 8) }
-// ];
+
 
 const appointmentSchema = new mongoose.Schema({
   patient: String,
@@ -69,17 +65,7 @@ app.get("/api/health", (req, res) =>
   res.json({ ok: true, service: "Swasthya Sakha API" }),
 );
 
-// app.post('/api/auth/login', async (req, res) => {
-//   const { username, password, role } = req.body || {};
-//   const u = users.find((x) => x.username === username && x.role === role);
-//   if (!u || !(await bcrypt.compare(password || '', u.password))) {
-//     return res.status(401).json({ message: 'Invalid demo credentials' });
-//   }
-//   const token = jwt.sign({ id: u.id, name: u.name, role: u.role }, JWT_SECRET, { expiresIn: '8h' });
-//   res.json({ token, user: { id: u.id, name: u.name, role: u.role } });
-// });
 
-// app.get('/api/me', auth, (req, res) => res.json({ user: req.user }));
 
 app.get("/api/appointments", auth, async (req, res) => {
   if (mongoose.connection.readyState !== 1) return res.json([]);

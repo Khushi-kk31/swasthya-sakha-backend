@@ -27,12 +27,14 @@ const doctorSchema = new mongoose.Schema(
     },
 
     // CLINICAL IDENTITY & CREDENTIALS
-    specialization: { // e.g., Cardiologist
+    specialization: {
+      // e.g., Cardiologist
       type: String,
       required: true,
       trim: true,
     },
-    registrationNo: { // Maps directly to frontend doctorLicense
+    registrationNo: {
+      // Maps directly to frontend doctorLicense
       type: String,
       required: true,
       unique: true,
@@ -55,11 +57,14 @@ const doctorSchema = new mongoose.Schema(
       default: "",
       trim: true,
     },
+    isProfileComplete: {
+      type: Boolean,
+      default: false,
+    },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-const Doctor =
-  mongoose.models.Doctor || mongoose.model("Doctor", doctorSchema);
+const Doctor = mongoose.models.Doctor || mongoose.model("Doctor", doctorSchema);
 
 export default Doctor;

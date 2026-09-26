@@ -3,13 +3,14 @@ import mongoose from "mongoose";
 const PatientSchema = new mongoose.Schema(
   {
     // MANDATORY IDENTIFIERS
-    abhaId: { 
+    abhaId: {
       type: String,
       required: true,
       unique: true,
       trim: true,
     },
-    abhaNumber: { // e.g. 61-5230-2840-0239
+    abhaNumber: {
+      // e.g. 61-5230-2840-0239
       type: String,
       required: true,
       unique: true,
@@ -57,22 +58,27 @@ const PatientSchema = new mongoose.Schema(
       default: "",
     },
     heightCm: {
-        type: Number,
-        default: null,
+      type: Number,
+      default: null,
     },
     weightKg: {
-        type: Number,
-        default: null,
+      type: Number,
+      default: null,
     },
     qrVerified: {
+      type: Boolean,
+      default: false,
+    },
+    isProfileComplete: {
       type: Boolean,
       default: false,
     },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-const Patient = mongoose.models.Patient || mongoose.model("Patient", PatientSchema);
+const Patient =
+  mongoose.models.Patient || mongoose.model("Patient", PatientSchema);
 export default Patient;

@@ -27,13 +27,14 @@ const healthWorkerSchema = new mongoose.Schema(
     },
 
     // HEALTH SYSTEM DEPLOYMENT INFO
-    healthWorkerId: { 
+    healthWorkerId: {
       type: String,
       required: true,
       unique: true,
       trim: true,
     },
-    facility: { // Maps directly to frontend hospitalName
+    facility: {
+      // Maps directly to frontend hospitalName
       type: String,
       required: true,
       trim: true,
@@ -59,8 +60,12 @@ const healthWorkerSchema = new mongoose.Schema(
       default: "",
       trim: true,
     },
+    isProfileComplete: {
+      type: Boolean,
+      default: false,
+    },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const HealthWorker =

@@ -21,60 +21,74 @@ const getModelByRole = (role) => {
 export const register = async (req, res) => {
   try {
     const { role, password, name } = req.body;
-    
+
     if (!role || !password || !name) {
-      return res.status(400).json({ message: "Mandatory structural parameters are missing." });
+      return res
+        .status(400)
+        .json({ message: "Mandatory structural parameters are missing." });
     }
 
     const TargetModel = getModelByRole(role);
     if (!TargetModel) {
-      return res.status(400).json({ message: "The provided deployment role scope is invalid." });
+      return res
+        .status(400)
+        .json({ message: "The provided deployment role scope is invalid." });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
 
     if (role === "patient") {
-      const { abhaAddress, abhaNumber, gender, dateOfBirth, qrVerified } = req.body;
+      const { abhaAddress, abhaNumber, gender, dateOfBirth, qrVerified } =
+        req.body;
 
       if (!abhaAddress || !abhaNumber || !gender || !dateOfBirth) {
-        return res.status(400).json({ message: "Missing required patient registration parameters." });
+        return res
+          .status(400)
+          .json({
+            message: "Missing required patient registration parameters.",
+          });
       }
 
       const baseUsername = name.toLowerCase().replace(/[^a-z0-9]/g, "");
-      
+
       const generatedUsername = `${baseUsername}${Math.floor(100 + Math.random() * 900)}`;
 
       const cleanAbhaNumber = abhaNumber.trim();
       const cleanAbhaAddress = abhaAddress.trim();
 
-      const existingPatient = await TargetModel.findOne({ 
-        $or: [{ abhaNumber: cleanAbhaNumber }, { username: generatedUsername }] 
+      const existingPatient = await TargetModel.findOne({
+        $or: [{ abhaNumber: cleanAbhaNumber }, { username: generatedUsername }],
       });
-      
+
       if (existingPatient) {
-        return res.status(400).json({ message: "ABHA Number or unique username already exists." });
+        return res
+          .status(400)
+          .json({ message: "ABHA Number or unique username already exists." });
       }
 
-      const newPatient = new TargetModel({ 
-        name: name.trim(), 
-        username: generatedUsername,  
-        password: hashedPassword, 
-        abhaId: cleanAbhaAddress,          
-        abhaNumber: cleanAbhaNumber,   
-        gender, 
-        dateOfBirth, 
-        qrVerified: qrVerified || false 
+      const newPatient = new TargetModel({
+        name: name.trim(),
+        username: generatedUsername,
+        password: hashedPassword,
+        abhaId: cleanAbhaAddress,
+        abhaNumber: cleanAbhaNumber,
+        gender,
+        dateOfBirth,
+        qrVerified: qrVerified || false,
+        isProfileComplete: false,
       });
-      
-      await newPatient.save();
-    }
 
-    else if (role === "healthWorker") {
+      await newPatient.save();
+    } else if (role === "healthWorker") {
       const { healthWorkerId, email } = req.body;
-      
+
       const facility = req.body.facility;
 
       if (!healthWorkerId || !facility) {
-        return res.status(400).json({ message: "Missing required health worker facility parameters." });
+        return res
+          .status(400)
+          .json({
+            message: "Missing required health worker facility parameters.",
+          });
       }
 
       const cleanWorkerId = healthWorkerId.trim();
@@ -85,31 +99,38 @@ export const register = async (req, res) => {
         $or: [
           { healthWorkerId: cleanWorkerId },
           { username: generatedUsername },
-          ...(cleanEmail ? [{ email: cleanEmail }] : [])
-        ]
+          ...(cleanEmail ? [{ email: cleanEmail }] : []),
+        ],
       });
 
       if (existingWorker) {
-        return res.status(400).json({ message: "Health Worker ID, unique username, or email already registered." });
+        return res
+          .status(400)
+          .json({
+            message:
+              "Health Worker ID, unique username, or email already registered.",
+          });
       }
 
       const newWorker = new TargetModel({
         name: name.trim(),
-        username: generatedUsername,  // Saves cleanly as name + suffix (e.g. mukesh234)
+        username: generatedUsername, // Saves cleanly as name + suffix (e.g. mukesh234)
         email: cleanEmail,
         password: hashedPassword,
         healthWorkerId: cleanWorkerId,
-        facility: cleanFacility
+        facility: cleanFacility,
       });
 
       await newWorker.save();
-    }
-
-     else if (role === "doctor") {
+    } else if (role === "doctor") {
       const { registrationNo, specialization, email } = req.body;
 
       if (!registrationNo || !specialization) {
-        return res.status(400).json({ message: "Missing required doctor certification parameters." });
+        return res
+          .status(400)
+          .json({
+            message: "Missing required doctor certification parameters.",
+          });
       }
 
       const cleanRegNo = registrationNo.trim();
@@ -121,29 +142,34 @@ export const register = async (req, res) => {
         $or: [
           { registrationNo: cleanRegNo },
           { username: generatedUsername },
-          ...(cleanEmail ? [{ email: cleanEmail }] : [])
-        ]
+          ...(cleanEmail ? [{ email: cleanEmail }] : []),
+        ],
       });
 
       if (existingDoc) {
-        return res.status(400).json({ message: "Medical license registration number, username, or email already registered." });
+        return res
+          .status(400)
+          .json({
+            message:
+              "Medical license registration number, username, or email already registered.",
+          });
       }
 
       const newDoc = new TargetModel({
         name: name.trim(),
-        username: generatedUsername,  // Saves cleanly as name + suffix (e.g. mukesh234)
+        username: generatedUsername, // Saves cleanly as name + suffix (e.g. mukesh234)
         email: cleanEmail,
         password: hashedPassword,
         registrationNo: cleanRegNo,
-        specialization: cleanSpecialization
+        specialization: cleanSpecialization,
       });
 
       await newDoc.save();
     }
 
-
-    return res.status(201).json({ message: "Registration successful! You can now log in." });
-
+    return res
+      .status(201)
+      .json({ message: "Registration successful! You can now log in." });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -163,14 +189,18 @@ export const login = async (req, res) => {
     }
 
     const user = await TargetModel.findOne({
-      $or: [
-        { username: username }, 
-        { abhaNumber: username }
-      ]
+      $or: [{ username: username }, { abhaNumber: username }],
     });
 
+    if (user && user.isProfileComplete === undefined) {
+      user.isProfileComplete = false;
+      await user.save(); 
+    }
+
     if (!user) {
-      return res.status(401).json({ message: "Invalid credentials or role selection." });
+      return res
+        .status(401)
+        .json({ message: "Invalid credentials or role selection." });
     }
 
     // Verify hashed password matches the db record
@@ -183,7 +213,7 @@ export const login = async (req, res) => {
     const token = jwt.sign(
       { id: user._id, role: role },
       process.env.JWT_SECRET || "fallback_local_secret_key",
-      { expiresIn: "1d" }
+      { expiresIn: "1d" },
     );
 
     // Strip password out before returning
@@ -194,10 +224,9 @@ export const login = async (req, res) => {
       token,
       user: {
         ...userResponse,
-        role 
-      }
+        role,
+      },
     });
-
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
