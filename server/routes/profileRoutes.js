@@ -32,12 +32,26 @@ router.put("/update", async (req, res) => {
       );
     } 
     else if (role === "doctor") {
-      // Add Doctor update query here later
-      // updatedUser = await Doctor.findOneAndUpdate({ username }, { ... }, { new: true });
+      updatedUser = await Doctor.findOneAndUpdate(
+        { username },
+        { 
+          registrationNo: doctorLicense, // Maps to your schema tracking value
+          specialization,
+          isProfileComplete: true 
+        },
+        { new: true, runValidators: true }
+      );
     } 
     else if (role === "healthWorker") {
-      // Add Health Worker update query here later
-      // updatedUser = await HealthWorker.findOneAndUpdate({ username }, { ... }, { new: true });
+      updatedUser = await HealthWorker.findOneAndUpdate(
+        { username },
+        { 
+          healthWorkerId, 
+          facility,
+          isProfileComplete: true 
+        },
+        { new: true, runValidators: true }
+      );
     }
 
     if (!updatedUser) {

@@ -28,6 +28,9 @@ export const register = async (req, res) => {
         .json({ message: "Mandatory structural parameters are missing." });
     }
 
+    const baseUsername = name.toLowerCase().replace(/[^a-z0-9]/g, "");
+    const generatedUsername = `${baseUsername}${Math.floor(100 + Math.random() * 900)}`;
+
     const TargetModel = getModelByRole(role);
     if (!TargetModel) {
       return res
@@ -47,10 +50,6 @@ export const register = async (req, res) => {
             message: "Missing required patient registration parameters.",
           });
       }
-
-      const baseUsername = name.toLowerCase().replace(/[^a-z0-9]/g, "");
-
-      const generatedUsername = `${baseUsername}${Math.floor(100 + Math.random() * 900)}`;
 
       const cleanAbhaNumber = abhaNumber.trim();
       const cleanAbhaAddress = abhaAddress.trim();
@@ -119,6 +118,7 @@ export const register = async (req, res) => {
         password: hashedPassword,
         healthWorkerId: cleanWorkerId,
         facility: cleanFacility,
+        isProfileComplete: false,
       });
 
       await newWorker.save();
@@ -162,6 +162,7 @@ export const register = async (req, res) => {
         password: hashedPassword,
         registrationNo: cleanRegNo,
         specialization: cleanSpecialization,
+        isProfileComplete: false,
       });
 
       await newDoc.save();

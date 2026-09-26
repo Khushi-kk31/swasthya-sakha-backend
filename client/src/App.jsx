@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect , useState} from "react";
 import {
   Routes,
   Route,
@@ -31,7 +31,9 @@ import {
 import Register from "./components/Register";
 
 function Guard({ children, roles }) {
-  const user = useSelector((s) => s.auth.user);
+  const cachedAuth = localStorage.getItem("ss_auth");
+  const session = cachedAuth ? JSON.parse(cachedAuth) : null;
+  const user = session?.user;
 
   if (!user) {
     return <Navigate to="/login" replace />;
@@ -46,20 +48,27 @@ function Guard({ children, roles }) {
 
 
 function Shell() {
-  const user = useSelector((s) => s.auth.user);
-  const dispatch = useDispatch();
+  const [user, setUser] = useState(() => {
+    const cachedAuth = localStorage.getItem("ss_auth");
+    return cachedAuth ? JSON.parse(cachedAuth).user : null;
+  });
+
+
   const loc = useLocation();
 
+  // Watch for state changes across route updates
   useEffect(() => {
-    dispatch(
-      setHealthData({
-        facilities,
-        medicines,
-        diagnostics,
-        appointments,
-      })
-    );
-  }, [dispatch]);
+    const handleStorageChange = () => {
+      const cachedAuth = localStorage.getItem("ss_auth");
+      if (cachedAuth) {
+        setCurrentUser(JSON.parse(cachedAuth).user);
+      }
+    };
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
+
+  if (!user) return <Navigate to="/login" replace />;
 
   const seg = loc.pathname.split("/").filter(Boolean);
   const subpage = seg[1] || "overview";
@@ -72,7 +81,7 @@ function Shell() {
       facilityAdmin: "Facility Admin",
       districtAdmin: "District Admin",
     },
-
+    profile: "Account Profile Settings",
     facilities: "Facility GIS & Finder",
     emergency: "Emergency Ambulance",
     teleconsult: "Teleconsultation",
@@ -90,33 +99,33 @@ function Shell() {
 
       <main className="min-w-0 flex-1">
         <Topbar
-          title={
-            titles[subpage]?.[user.role] ||
-            titles[subpage] ||
-            "Dashboard"
-          }
-        />
+  title={
+    typeof titles[subpage] === "object"
+      ? (titles[subpage]?.[user?.role] || "Dashboard") // If it's the overview object, resolve the string safely
+      : (titles[subpage] || "Dashboard")               // If it's a normal string, print it directly
+  }
+/>
 
         <div className="p-4 md:p-7 max-w-[1600px] mx-auto">
           <Routes>
 
             {/* MAIN DASHBOARD */}
             <Route
-              path="/dashboard"
-              element={
-                user.role === "patient" ? (
-                  <PatientDashboard />
-                ) : user.role === "healthWorker" ? (
-                  <HealthWorkerDashboard />
-                ) : user.role === "doctor" ? (
-                  <DoctorDashboard />
-                ) : user.role === "facilityAdmin" ? (
-                  <FacilityAdminDashboard />
-                ) : (
-                  <DistrictAdminDashboard />
-                )
-              }
-            />
+            path="/dashboard"
+            element={
+              user.role === "patient" ? (
+                <PatientDashboard loggedInUser={user} /> 
+              ) : user.role === "healthWorker" ? (
+                <HealthWorkerDashboard loggedInUser={user} />
+              ) : user.role === "doctor" ? (
+                <DoctorDashboard loggedInUser={user} />
+              ) : user.role === "facilityAdmin" ? (
+                <FacilityAdminDashboard loggedInUser={user} />
+              ) : (
+                <DistrictAdminDashboard loggedInUser={user} />
+              )
+            }
+          />
 
             <Route
               path="/dashboard/profile"
@@ -128,14 +137,14 @@ function Shell() {
             <Route
               path="/dashboard/history"
               element={
-                <PatientDashboard subpage="history" />
+                <PatientDashboard subpage="history"  loggedInUser={user} />
               }
             />
 
             <Route
               path="/dashboard/appointments"
               element={
-                <PatientDashboard subpage="appointments" />
+                <PatientDashboard subpage="appointments" loggedInUser={user}  />
               }
             />
 
