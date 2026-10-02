@@ -5,7 +5,6 @@ if (baseUri && !baseUri.endsWith("/api")) {
 }
 
 const API = baseUri;
-// const API = "https://swasthya-sakha-web.onrender.com/api";
 
 export async function api(path, options = {}) {
   const auth = JSON.parse(localStorage.getItem("ss_auth") || "null");

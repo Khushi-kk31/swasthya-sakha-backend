@@ -43,11 +43,9 @@ export default function Login() {
         JSON.stringify({ token: data.token, user: data.user }),
       );
 
-      // 4. Update Redux store state and navigate to workspace shell
       dispatch(loginSuccess(data));
       nav("/dashboard");
     } catch (err) {
-      // Displays the exact reason sent by your Express controller (e.g. "Invalid credentials")
       setError(err.message || "Login failed.");
     }
   };

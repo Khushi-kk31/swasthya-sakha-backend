@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const doctorSchema = new mongoose.Schema(
   {
-    // CORE ACCOUNT IDENTIFIERS
+
     name: {
       type: String,
       required: true,
@@ -26,22 +26,19 @@ const doctorSchema = new mongoose.Schema(
       required: true,
     },
 
-    // CLINICAL IDENTITY & CREDENTIALS
     specialization: {
-      // e.g., Cardiologist
+
       type: String,
       required: true,
       trim: true,
     },
     registrationNo: {
-      // Maps directly to frontend doctorLicense
       type: String,
       required: true,
       unique: true,
       trim: true,
     },
 
-    // FACILITY PLACEMENT PLUGINS (Optional during initial sign up)
     phone: {
       type: String,
       default: "",

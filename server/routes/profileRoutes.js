@@ -1,11 +1,10 @@
 import express from "express";
 import Patient from "../models/Patient.js";
-// import Doctor from "../models/Doctor.js";         // Import when ready
+import Doctor from "../models/Doctor.js"   
 import HealthWorker from "../models/HealthWorker.js";
 
 const router = express.Router();
 
-// PUT /api/profile/update
 router.put("/update", async (req, res) => {
   try {
     const {
@@ -19,6 +18,8 @@ router.put("/update", async (req, res) => {
       qualification,
       village,
       district,
+      facilityId,
+      hospital,
     } = req.body;
     if (!username || !role) {
       return res
@@ -48,15 +49,15 @@ router.put("/update", async (req, res) => {
       updatedUser = await Doctor.findOneAndUpdate(
         { username },
         {
-          registrationNo: doctorLicense, // Maps to your schema tracking value
-          specialization,
+          phone,
+          facilityId,
+          hospital,
           isProfileComplete: true,
         },
         { new: true, runValidators: true },
       );
     } else if (role === "healthWorker") {
-       console.log("HEALTH WORKER BRANCH HIT");
-        console.log("HealthWorker model:", HealthWorker);
+     
       updatedUser = await HealthWorker.findOneAndUpdate(
         { username },
         {

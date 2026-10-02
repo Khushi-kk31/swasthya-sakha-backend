@@ -101,8 +101,8 @@ function Shell() {
         <Topbar
   title={
     typeof titles[subpage] === "object"
-      ? (titles[subpage]?.[user?.role] || "Dashboard") // If it's the overview object, resolve the string safely
-      : (titles[subpage] || "Dashboard")               // If it's a normal string, print it directly
+      ? (titles[subpage]?.[user?.role] || "Dashboard") 
+      : (titles[subpage] || "Dashboard")               
   }
 />
 
@@ -230,10 +230,6 @@ export default function App() {
   return (
     <Routes>
 
-      {/* =========================================
-          LANDING PAGE
-          ========================================= */}
-
       <Route
         path="/"
         element={
@@ -252,10 +248,6 @@ export default function App() {
       />
 
 
-      {/* =========================================
-          LOGIN
-          ========================================= */}
-
       <Route
         path="/login"
         element={<Login />}
@@ -265,11 +257,6 @@ export default function App() {
         path="/register"
         element={<Register/>}
       />
-
-
-      {/* =========================================
-          PROTECTED DASHBOARD
-          ========================================= */}
 
       <Route
         path="/*"

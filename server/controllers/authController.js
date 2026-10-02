@@ -204,13 +204,7 @@ export const login = async (req, res) => {
         ],
       });
     } else if (role === "healthWorker") {
-      
       const emailIdentifier = cleanIdentifier.toLowerCase();
-
-      console.log("Role:", role);
-console.log("Model:", TargetModel.modelName);
-console.log("Identifier:", JSON.stringify(cleanIdentifier));
-console.log("Normalized email:", JSON.stringify(emailIdentifier));
 
       user = await TargetModel.findOne({
         $or: [
@@ -221,15 +215,20 @@ console.log("Normalized email:", JSON.stringify(emailIdentifier));
       });
 
       console.log("LOGIN INPUT:", {
-  username,
-  role,
-});
+        username,
+        role,
+      });
 
-console.log("USER FOUND:", user ? {
-  username: user.username,
-  email: user.email,
-  healthWorkerId: user.healthWorkerId,
-} : null);
+      console.log(
+        "USER FOUND:",
+        user
+          ? {
+              username: user.username,
+              email: user.email,
+              healthWorkerId: user.healthWorkerId,
+            }
+          : null,
+      );
     } else {
       user = await TargetModel.findOne({ username: cleanIdentifier });
     }
