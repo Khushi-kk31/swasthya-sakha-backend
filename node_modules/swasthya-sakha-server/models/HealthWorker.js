@@ -26,7 +26,6 @@ const healthWorkerSchema = new mongoose.Schema(
       required: true,
     },
 
-    // HEALTH SYSTEM DEPLOYMENT INFO
     healthWorkerId: {
       type: String,
       required: true,
@@ -34,7 +33,6 @@ const healthWorkerSchema = new mongoose.Schema(
       trim: true,
     },
     facility: {
-      // Maps directly to frontend hospitalName
       type: String,
       required: true,
       trim: true,
@@ -44,7 +42,6 @@ const healthWorkerSchema = new mongoose.Schema(
       default: "",
       trim: true,
     },
-
     phone: {
       type: String,
       default: "",

@@ -20,22 +20,24 @@ export default function Login() {
     e.preventDefault();
     setError("");
 
-    // 1. Capture what the user actually types into the form inputs
     const enteredUsername = e.currentTarget.username?.value;
-    const enteredPassword = e.currentTarget.password.value;
+  const enteredPassword = e.currentTarget.password?.value;
+
+  if (!enteredUsername || !enteredPassword) {
+    setError("Please fill out all credentials fields.");
+    return;
+  }
 
     try {
       const data = await api("/auth/login", {
         method: "POST",
         body: JSON.stringify({
-          // 2. Send the real user-entered details to your new Express backend controller
-          username: enteredUsername || role, // Fallback to role string only if field is blank
+          username: enteredUsername.trim(), 
           password: enteredPassword,
-          role, // Matches the active selected workspace tab
+          role, 
         }),
       });
 
-      // 3. Save the token payload into localStorage so api.js can read it for protected endpoints
       localStorage.setItem(
         "ss_auth",
         JSON.stringify({ token: data.token, user: data.user }),
@@ -128,16 +130,26 @@ export default function Login() {
             </div>
             <form onSubmit={submit} className="space-y-4">
               <label className="block text-sm font-semibold text-[#0b2239]">
-                Username or 14-Digit ABHA Number
+                {role === "patient" && "Username or 14-Digit ABHA Number"}
+                {role === "doctor" &&
+                  "Email Address or Medical Registration No"}
+                {role === "healthWorker" && "Email Address or Health Worker ID"}
+                {role === "facilityAdmin" && "Username"}
+                {role === "districtAdmin" && "Username"}
+
                 <input
                   name="username"
                   required
                   type="text"
-                  className="mt-1.5 w-full border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-teal-500"
+                  className="mt-1.5 w-full border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-teal-500 text-sm"
                   placeholder={
                     role === "patient"
                       ? "e.g., 61-5230-2840-0239 or mukesh123"
-                      : "Enter your username"
+                      : role === "doctor"
+                        ? "e.g., doctor@gmail.com or MCI-1234"
+                        : role === "healthWorker"
+                          ? "e.g., worker@gmail.com or HW-5678"
+                          : "Enter your username"
                   }
                 />
               </label>

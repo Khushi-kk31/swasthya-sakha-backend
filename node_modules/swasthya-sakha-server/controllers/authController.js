@@ -44,11 +44,9 @@ export const register = async (req, res) => {
         req.body;
 
       if (!abhaAddress || !abhaNumber || !gender || !dateOfBirth) {
-        return res
-          .status(400)
-          .json({
-            message: "Missing required patient registration parameters.",
-          });
+        return res.status(400).json({
+          message: "Missing required patient registration parameters.",
+        });
       }
 
       const cleanAbhaNumber = abhaNumber.trim();
@@ -83,11 +81,9 @@ export const register = async (req, res) => {
       const facility = req.body.facility;
 
       if (!healthWorkerId || !facility) {
-        return res
-          .status(400)
-          .json({
-            message: "Missing required health worker facility parameters.",
-          });
+        return res.status(400).json({
+          message: "Missing required health worker facility parameters.",
+        });
       }
 
       const cleanWorkerId = healthWorkerId.trim();
@@ -103,12 +99,10 @@ export const register = async (req, res) => {
       });
 
       if (existingWorker) {
-        return res
-          .status(400)
-          .json({
-            message:
-              "Health Worker ID, unique username, or email already registered.",
-          });
+        return res.status(400).json({
+          message:
+            "Health Worker ID, unique username, or email already registered.",
+        });
       }
 
       const newWorker = new TargetModel({
@@ -126,11 +120,9 @@ export const register = async (req, res) => {
       const { registrationNo, specialization, email } = req.body;
 
       if (!registrationNo || !specialization) {
-        return res
-          .status(400)
-          .json({
-            message: "Missing required doctor certification parameters.",
-          });
+        return res.status(400).json({
+          message: "Missing required doctor certification parameters.",
+        });
       }
 
       const cleanRegNo = registrationNo.trim();
@@ -147,12 +139,10 @@ export const register = async (req, res) => {
       });
 
       if (existingDoc) {
-        return res
-          .status(400)
-          .json({
-            message:
-              "Medical license registration number, username, or email already registered.",
-          });
+        return res.status(400).json({
+          message:
+            "Medical license registration number, username, or email already registered.",
+        });
       }
 
       const newDoc = new TargetModel({
@@ -178,36 +168,92 @@ export const register = async (req, res) => {
 
 export const login = async (req, res) => {
   try {
+    console.log("Controller Hit");
     const { username, password, role } = req.body;
 
+    console.log(`[Login Attempt] Role: ${role} | Identifier: ${username}`);
+
     if (!username || !password || !role) {
-      return res.status(400).json({ message: "Missing login details." });
+      return res
+        .status(400)
+        .json({ success: false, message: "Missing login details." });
     }
 
     const TargetModel = getModelByRole(role);
     if (!TargetModel) {
-      return res.status(400).json({ message: "Invalid workspace context." });
-    }
-
-    const user = await TargetModel.findOne({
-      $or: [{ username: username }, { abhaNumber: username }],
-    });
-
-    if (user && user.isProfileComplete === undefined) {
-      user.isProfileComplete = false;
-      await user.save(); 
-    }
-
-    if (!user) {
       return res
-        .status(401)
-        .json({ message: "Invalid credentials or role selection." });
+        .status(400)
+        .json({ success: false, message: "Invalid workspace context." });
+    }
+
+    let user;
+    const cleanIdentifier = username.trim();
+
+    const normalizedEmail = cleanIdentifier.toLowerCase();
+
+    if (role === "patient") {
+      user = await TargetModel.findOne({
+        $or: [{ abhaNumber: cleanIdentifier }, { username: cleanIdentifier }],
+      });
+    } else if (role === "doctor") {
+      user = await TargetModel.findOne({
+        $or: [
+          { email: cleanIdentifier },
+          { registrationNo: cleanIdentifier },
+          { username: cleanIdentifier },
+        ],
+      });
+    } else if (role === "healthWorker") {
+      
+      const emailIdentifier = cleanIdentifier.toLowerCase();
+
+      console.log("Role:", role);
+console.log("Model:", TargetModel.modelName);
+console.log("Identifier:", JSON.stringify(cleanIdentifier));
+console.log("Normalized email:", JSON.stringify(emailIdentifier));
+
+      user = await TargetModel.findOne({
+        $or: [
+          { email: emailIdentifier },
+          { healthWorkerId: cleanIdentifier },
+          { username: cleanIdentifier },
+        ],
+      });
+
+      console.log("LOGIN INPUT:", {
+  username,
+  role,
+});
+
+console.log("USER FOUND:", user ? {
+  username: user.username,
+  email: user.email,
+  healthWorkerId: user.healthWorkerId,
+} : null);
+    } else {
+      user = await TargetModel.findOne({ username: cleanIdentifier });
+    }
+
+    // If no matching profile documentation returned out of the models
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid credentials or role selection.",
+      });
+    }
+
+    // Auto flag initialization sync logic
+    if (user.isProfileComplete === undefined) {
+      user.isProfileComplete = false;
+      await user.save();
     }
 
     // Verify hashed password matches the db record
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      return res.status(401).json({ message: "Invalid credentials." });
+      return res
+        .status(401)
+        .json({ success: false, message: "Invalid credentials." });
     }
 
     // Generate JWT token containing identity metadata
@@ -217,11 +263,12 @@ export const login = async (req, res) => {
       { expiresIn: "1d" },
     );
 
-    // Strip password out before returning
+    // Strip password out before returning parameters payload
     const userResponse = user.toObject();
     delete userResponse.password;
 
     return res.status(200).json({
+      success: true,
       token,
       user: {
         ...userResponse,
@@ -229,7 +276,8 @@ export const login = async (req, res) => {
       },
     });
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    console.error("Authentication Controller Error Stack:", error);
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
 

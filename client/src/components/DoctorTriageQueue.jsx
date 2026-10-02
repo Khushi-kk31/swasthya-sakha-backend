@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Clock, RefreshCw } from "lucide-react";
+import { api } from "../api";
 
-const VITE_API_URL = import.meta.env.VITE_API_URL;
+// const VITE_API_URL = import.meta.env.VITE_API_URL;
 
 export default function DoctorTriageQueue({ onQueueUpdate }) {
   const [triageList, setTriageList] = useState([]);
@@ -19,9 +20,8 @@ export default function DoctorTriageQueue({ onQueueUpdate }) {
   const fetchTriageData = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${VITE_API_URL}/triage/all`);
-      if (!res.ok) return;
-      const json = await res.json();
+      const json = await api("/triage/all");
+      // if (!res.ok) return;
 
       const rawList = Array.isArray(json)
         ? json
