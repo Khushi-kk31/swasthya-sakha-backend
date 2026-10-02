@@ -58,15 +58,20 @@ function Shell() {
 
   // Watch for state changes across route updates
   useEffect(() => {
-    const handleStorageChange = () => {
-      const cachedAuth = localStorage.getItem("ss_auth");
-      if (cachedAuth) {
-        setCurrentUser(JSON.parse(cachedAuth).user);
-      }
-    };
-    window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
-  }, []);
+  const handleStorageChange = () => {
+    const cachedAuth = localStorage.getItem("ss_auth");
+
+    if (cachedAuth) {
+      setUser(JSON.parse(cachedAuth).user);
+    }
+  };
+
+  window.addEventListener("storage", handleStorageChange);
+
+  return () => {
+    window.removeEventListener("storage", handleStorageChange);
+  };
+}, []);
 
   if (!user) return <Navigate to="/login" replace />;
 
